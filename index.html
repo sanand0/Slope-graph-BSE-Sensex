@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BSE Sensex data</title>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <meta charset="utf-8"/>
+
+  <style>
+
+    body   { color: #444; background: "#FFFFFF"; font: normal 12px "Adobe Garamond Pro", "Palatino", serif; margin: 2em; }
+    header { margin: 0 0 20px 420px; border-bottom: 1px solid #6c6c6c; width: 360px; position: relative; }
+    h1     { font-size: 28px; font-weight: normal; text-shadow: #fff 0 1px 0; margin: 0 0 0 0; padding: 0; }
+
+    span.label_year:hover { cursor: ew-resize; }
+
+    text.label { fill: #444; }
+    text.label.start { text-anchor: end; }
+    line.slope { stroke: #444; stroke-width: 1; }
+
+    .over text.label { fill: #bb2629; }
+    .over line.slope { stroke: #bb2629; stroke-width: 2; }
+  </style>
+
+</head>
+
+<body>
+  <header> <h1> BSE Sensex Data for a Day</h1> </header>
+  <div id="chart"></div>
+</body>
+
+<script>
+  d3.csv("gramener.csv", function(csv) {
+    data = csv;
+    var
+        sc_names = csv.map( function(d) { return d["SC_NAME"] }),
+        open_values = csv.map( function(d) { return d["OPEN"] }),
+        close_values = csv.map( function(d) { return d["CLOSE"] }),
+
+        font_size = 12,
+        margin    = 20,
+        width     = 1200,
+        height    = sc_names.length * font_size + margin, // 340
+
+        chart     = d3.select("#chart")
+                      .append("svg")
+                        .attr("width",  width)
+                        .attr("height", height);
+
+    // Scales
+    var y = d3.scale.linear()
+              .domain([0, sc_names.length]) // 0 - 10
+              .range([margin, height]); // 20 - 140
+
+    var slope = d3.scale.linear()
+                  // .domain( [d3.max(open_values.concat(close_values)), d3.min(open_values.concat(close_values))] ) // 83 - 29
+                  .domain([1000,30])
+                  .range([margin, height]); // 20 - 140
+
+    var update = function(open, close){
+      var
+          data      = csv.map( function(d) {
+                        var r = {
+                          label: d["SC_NAME"],
+                          start: d[open],
+                          end: d[close]
+                        };
+                        console.log(r);
+                        return r;
+                      })
+                      // Sort in descending order
+                      .sort(function(a,b){
+                        return d3.max([a.start, a.end]) > d3.max([b.start, b.end]) ?
+                               -1 :
+                               d3.max([a.start, a.end]) < d3.max([b.start, b.end]) ?
+                               1 : 0;
+                      });
+
+      // Countries
+      var sc_names = chart.selectAll("g.sc_names")
+                      .data(data);
+      sc_names
+        .enter()
+        .append("g")
+        .attr("class", "sc_names");
+
+      sc_names
+        .on("mouseover", function(d,i) { return d3.select(this).classed("over", true); })
+        .on("mouseout",  function(d,i) { return d3.select(this).classed("over", false); });
+
+      // ** Left column
+      var left_column = sc_names
+                          .selectAll("text.label.start")
+                            .data( function(d) { return [d]; } );
+          left_column
+           .enter()
+            .append("text")
+            .classed("label start", true)
+            .attr("xml:space", "preserve")
+            .style("font-size", font_size)
+            .attr("x", 400)
+            .attr("y", 0);
+
+          left_column
+            .attr("y", function(d,i) { return slope(d.start); })
+            .text(function(d) { return d.label+ "   " + d3.round(d.start, 1); });
+
+      // ** Right column
+      var right_column = sc_names
+                          .selectAll("text.label.end")
+                            .data( function(d) { return [d]; } );
+
+          right_column
+           .enter()
+            .append("text")
+            .classed("label end", true)
+            .attr("xml:space", "preserve")
+            .style("font-size", font_size)
+            .attr("x", width-400)
+            .attr("y", 0);
+
+          right_column
+            .attr("y", function(d,i) { return slope(d.end); })
+            .text(function(d) { return d3.round(d.end, 1) + "   " + d.label; });
+
+
+      // ** Slope lines
+      var line = sc_names
+                    .selectAll("line.slope")
+                      .data( function(d) { return [d]; } );
+          line
+           .enter()
+            .append("line")
+            .attr("x1", 410)
+            .attr("x2", width-410)
+            .attr("opacity", 0)
+            .attr("y1", 0)
+            .attr("y2", 0);
+
+          line
+            .classed("slope", function(d) { return d.start || d.end; })
+            .attr("opacity", 1)
+            .attr("y1", function(d,i) { return d.start && d.end ? Math.round( slope(d.start) - font_size/2 + 2) : null; })
+            .attr("y2", function(d,i) { return d.start && d.end ? Math.round( slope(d.end)   - font_size/2 + 2) : null; });
+
+
+      return chart;
+    };
+
+    return update("OPEN", "CLOSE");
+  });
+</script>
+
+</html>
