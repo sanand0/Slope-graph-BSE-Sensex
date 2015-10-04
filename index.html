@@ -17,8 +17,11 @@
     text.label.start { text-anchor: end; }
     line.slope { stroke: #444; stroke-width: 1; }
 
-    .over text.label { fill: #bb2629; }
-    .over line.slope { stroke: #bb2629; stroke-width: 2; }
+    text, line { transition: opacity 0.3s; }
+    .selected text, .selected line { opacity: 0.2; }
+
+    .over text.label { opacity: 1; fill: #bb2629; }
+    .over line.slope { opacity: 1; stroke: #bb2629; stroke-width: 2; }
   </style>
 
 </head>
@@ -84,8 +87,14 @@
         .attr("class", "sc_names");
 
       sc_names
-        .on("mouseover", function(d,i) { return d3.select(this).classed("over", true); })
-        .on("mouseout",  function(d,i) { return d3.select(this).classed("over", false); });
+        .on("mouseover", function(d,i) {
+          d3.select('#chart').classed('selected', true)
+          return d3.select(this).classed("over", true);
+        })
+        .on("mouseout",  function(d,i) {
+          d3.select('#chart').classed('selected', false)
+          return d3.select(this).classed("over", false);
+        });
 
       // ** Left column
       var left_column = sc_names
