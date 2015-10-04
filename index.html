@@ -48,7 +48,6 @@
 
       // Scales
       var slope = d3.scale.linear()
-          // .domain( [d3.max(open_values.concat(close_values)), d3.min(open_values.concat(close_values))] ) // 83 - 29
           .domain([1000, 30])
           .range([margin, height]); // 20 - 140
 
@@ -60,7 +59,6 @@
                       start: d[open],
                       end: d[close]
                   };
-                  console.log(r);
                   return r;
               })
               // Sort in descending order
@@ -78,8 +76,6 @@
               .enter()
               .append("g")
               .attr("class", "sc_names");
-
-          sc_names
               .on("mouseover", function(d, i) { return d3.select(this).classed("over", true); })
               .on("mouseout",  function(d, i) { return d3.select(this).classed("over", false); });
 
@@ -91,12 +87,8 @@
               .enter()
               .append("text")
               .classed("label start", true)
-              .attr("xml:space", "preserve")
               .style("font-size", font_size)
               .attr("x", 400)
-              .attr("y", 0);
-
-          left_column
               .attr("y", function(d, i) { return slope(d.start); })
               .text(function(d) { return d.label + "   " + d3.round(d.start, 1); });
 
@@ -109,35 +101,23 @@
               .enter()
               .append("text")
               .classed("label end", true)
-              .attr("xml:space", "preserve")
               .style("font-size", font_size)
               .attr("x", width - 400)
-              .attr("y", 0);
-
-          right_column
               .attr("y", function(d, i) { return slope(d.end); })
               .text(function(d) { return d3.round(d.end, 1) + "   " + d.label; });
 
           // ** Slope lines
           var line = sc_names
               .selectAll("line.slope")
-              .data(function(d) {
-                  return [d];
-              });
+              .data(function(d) { return [d]; });
           line
               .enter()
               .append("line")
+              .classed("slope", function(d) { return d.start || d.end; })
               .attr("x1", 410)
               .attr("x2", width - 410)
-              .attr("opacity", 0)
-              .attr("y1", 0)
-              .attr("y2", 0);
-
-          line
-              .classed("slope", function(d) { return d.start || d.end; })
-              .attr("opacity", 1)
-              .attr("y1", function(d, i) { return d.start && d.end ? Math.round(slope(d.start) - font_size / 2 + 2) : null; })
-              .attr("y2", function(d, i) { return d.start && d.end ? Math.round(slope(d.end) - font_size / 2 + 2) : null; });
+              .attr("y1", function(d) { return d.start && d.end ? Math.round(slope(d.start) - font_size / 2 + 2) : null; })
+              .attr("y2", function(d) { return d.start && d.end ? Math.round(slope(d.end) - font_size / 2 + 2) : null; });
 
           return chart;
       };
