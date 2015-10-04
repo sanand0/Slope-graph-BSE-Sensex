@@ -47,10 +47,6 @@
                         .attr("height", height);
 
     // Scales
-    var y = d3.scale.linear()
-              .domain([0, sc_names.length]) // 0 - 10
-              .range([margin, height]); // 20 - 140
-
     var slope = d3.scale.linear()
                   // .domain( [d3.max(open_values.concat(close_values)), d3.min(open_values.concat(close_values))] ) // 83 - 29
                   .domain([1000,30])
